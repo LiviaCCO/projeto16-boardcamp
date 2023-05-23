@@ -1,14 +1,21 @@
-import { Router } from "express"
-//import { createReceita, deleteReceita, editReceitaById, getReceitaById, getReceitas } from "../controllers/receitas.controller.js"
-//import { validateSchema } from "../middlewares/validateSchema.middleware.js"
-import { receitaSchema } from "../schemas/receitas.schema.js"
+import { Router } from "express";
+import { getGames, createGame } from "../controllers/games.controller.js"
+import { getCustomers, getCustomerId, createCustomer, editCustomerId } from "../controllers/customers.controller.js"
+import { getRentals, createRental, finishRental, deleteRental } from "../controllers/rent.controller.js"
+import { validateSchema } from "../middlewares/validateSchema.middleware.js"
+import { gameSchema, customerSchema, rentalSchema} from "../schemas/store.schema.js"
 
-const receitasRouter = Router()
+const storeRouter = Router()
 
-receitasRouter.get("/receitas", getReceitas)
-receitasRouter.get("/receitas/:id", getReceitaById)
-receitasRouter.post("/receitas", validateSchema(receitaSchema), createReceita)
-receitasRouter.delete("/receitas/:id", deleteReceita)
-receitasRouter.put("/receitas/:id", validateSchema(receitaSchema), editReceitaById)
+storeRouter.get("/games", getGames)
+storeRouter.post("/games", validateSchema(gameSchema), createGame)
+storeRouter.get("/customers", getCustomers)
+storeRouter.get("/customers/:id", getCustomerId)
+storeRouter.post("/customers", validateSchema(customerSchema), createCustomer)
+storeRouter.put("/customers/:id", validateSchema(customerSchema), editCustomerId)
+storeRouter.get("/rentals", getRentals)
+storeRouter.post("/rentals", validateSchema(rentalSchema), createRental) 
+storeRouter.post("/rentals/:id/return", validateSchema(rentalSchema), finishRental)
+storeRouter.delete("/rentals/:id", deleteRental)
 
-export default receitasRouter
+export default storeRouter
