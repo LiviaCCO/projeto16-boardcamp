@@ -9,8 +9,8 @@ export const gameSchema = joi.object({
 
 export const customerSchema = joi.object({
     name: joi.string().required(),
-    phone: joi.string().length(10, 11).regex(/^\d+$/).required(),
-    cpf: joi.string().length(11).regex(/^\d+$/).required(),
+    phone: joi.string().pattern(/^[0-9]{10,12}$/).required(),
+    cpf: joi.string().length(11).pattern(/^[0-9]+$/).required(),
     birthday: joi.date().max('now').min('1900-01-01').required()
 });
 

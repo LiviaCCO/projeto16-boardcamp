@@ -14,7 +14,9 @@ export async function createRental(req, res) {
     const {customerId, gameId, daysRented} = req.body
     //const { userId } = res.locals.session
     try {
-        const rent = await db.query(`INSERT INTO rentals (customerId, gameId, daysRented) VALUES (customerId, gameId, daysRented);`)
+        const rent = await db.query(`
+            INSERT INTO rentals (customerId, gameId, daysRented) VALUES ($1, $2, $3);
+            `, [customerId, gameId, daysRented])
         res.sendStatus(201)
     } catch (err) {
         res.status(500).send(err.message)
