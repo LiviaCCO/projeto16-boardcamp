@@ -32,7 +32,6 @@ export async function createCustomer(req, res) {
         const cpfCustomer = await db.query(`
             SELECT * FROM customers WHERE cpf=$1;
         `, [cpf]);
-        console.log(cpfCustomer.rows[0]);
         if(cpfCustomer.rows[0]) return res.sendStatus(409);
 
         const newCustomer = await db.query(`

@@ -37,8 +37,9 @@ export async function getRentals(req, res) {
 //verificar
 export async function createRental(req, res) {
     const {customerId, gameId, daysRented} = req.body;
-    const rentDate = dayjs().format('YYYY-MM-DD');
-    //const rentDate = Date.now();
+    //const rentDate = dayjs().format('YYYY-MM-DD');
+    const rentDate = new Date(Date.now()).toISOString().split('T')[0]
+
     try {
         if (daysRented<1) return res.sendStatus(400)
         //verifica o usuario
@@ -52,13 +53,18 @@ export async function createRental(req, res) {
             SELECT * FROM games WHERE id=$1;
             `, [gameId])
         if (!game.rows[0]) return res.sendStatus(400)
+
+        //verificar se há disponibilidade
+        const disp = await db.query(`SELECT * FROM rentals WHERE "returnDate" =$1 AND "gameId"=$2;`, [null, gameId])
+        if(disp.rows.length >= game.rows[0].stockTotal) res.sendStatus(400)
+        
         const valueGame = game.rows[0].pricePerDay;
         const originalPrice = daysRented*valueGame;
         
         await db.query(`
             INSERT INTO rentals ("customerId", "gameId", "daysRented", "rentDate", "returnDate", "delayFee", "originalPrice") 
             VALUES ($1, $2, $3, $4, $5, $6, $7);
-        `, [customerId, gameId, daysRented, rentDate, null, null, originalPrice])
+        `, [customerId, gameId, daysRented, rentDate, null, null, originalPrice]) 
         res.sendStatus(201)
     } catch (err) {
         res.status(500).send(err.message)
@@ -69,16 +75,18 @@ export async function finishRental(req, res) {
     const { id } = req.params
     const returnDate = dayjs().format('YYYY-MM-DD');
     const finishDate = new Date(returnDate);
-    let delayFee  = 0;
+    let delayFee  = null;
     
     try {
+        //verificar se existe reserva neste id
         const rentalId = await db.query(`SELECT * FROM rentals WHERE id=$1;`, [id])
         if (!rentalId.rows[0]) return res.sendStatus(400);
+        //verificar se a reserva foi finalizada
         if (rentalId.rows[0].returnDate !== null) return res.sendStatus(400);
+        //verificar atraso na entrega
         const startDate = new Date(rentalId.rows[0].rentDate);
         const difMs = Math.abs(finishDate - startDate);
         const difDates = Math.floor(difMs / (24 * 60 * 60 * 1000));
-        
         if(difDates > rentalId.rows[0].daysRented){
             const game = await db.query(`
                 SELECT * FROM games WHERE id=$1;
@@ -86,13 +94,9 @@ export async function finishRental(req, res) {
 
             const valueGame = game.rows[0].pricePerDay;
             delayFee = (difDates - rentalId.rows[0].daysRented)*valueGame;
-        }
-        console.log("dif de dias", difDates);
-             
-        const finish = await db.query(`UPDATE rentals SET "returnDate"=$1, "delayFee"=$2 WHERE id=$3;
-        `, [ returnDate, delayFee, id])
-        const finish2 = await db.query(`SELECT * FROM rentals;`)
-        console.table(finish2.rows)
+        }           
+        await db.query(`UPDATE rentals SET "returnDate"=$1, "delayFee"=$2 WHERE id=$3;
+        `, [ returnDate, delayFee, id])    
         res.sendStatus(200)
     } catch (err) {
         res.status(500).send(err.message)
