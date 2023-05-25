@@ -19,4 +19,3 @@ storeRouter.post("/rentals/:id/return", finishRental)
 storeRouter.delete("/rentals/:id", deleteRental)
 
 export default storeRouter
-export default storeRouter
