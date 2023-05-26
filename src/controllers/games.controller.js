@@ -3,7 +3,6 @@ import { db } from "../database/database.connection.js"
 export async function getGames(req, res) {
     try {
         const games = await db.query(`SELECT * FROM games;`)
-        //console.table(games.rows)
         res.send(games.rows)
     } catch (err) {
         res.status(500).send(err.message)
@@ -12,7 +11,6 @@ export async function getGames(req, res) {
 
 export async function createGame(req, res) {
     const { name, image, stockTotal, pricePerDay } = req.body
-    console.log("Entrou")
     try {
         if (stockTotal === 0 || pricePerDay === 0) return res.sendStatus(400);
 

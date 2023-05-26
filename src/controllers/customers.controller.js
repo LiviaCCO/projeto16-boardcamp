@@ -1,4 +1,5 @@
 import { db } from "../database/database.connection.js"
+import moment from "moment"
 
 export async function getCustomers(req, res) {
     try {
@@ -26,8 +27,10 @@ export async function getCustomerId(req, res) {
 }
 
 export async function createCustomer(req, res) {
-    const { name, phone, cpf, birthday } = req.body
-    //const { userId } = res.locals.session
+    const { name, phone, cpf, birthday } = req.body;
+    const birth = new Date(birthday).toISOString().split('T')[0];
+
+    
     try {
         const cpfCustomer = await db.query(`
             SELECT * FROM customers WHERE cpf=$1;
@@ -36,7 +39,7 @@ export async function createCustomer(req, res) {
 
         const newCustomer = await db.query(`
             INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);
-            `, [name, phone, cpf, birthday]);
+            `, [name, phone, cpf, birth]);
         res.sendStatus(201)
     } catch (err) {
         res.status(500).send(err.message)

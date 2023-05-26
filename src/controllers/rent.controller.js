@@ -38,7 +38,8 @@ export async function getRentals(req, res) {
 export async function createRental(req, res) {
     const {customerId, gameId, daysRented} = req.body;
     //const rentDate = dayjs().format('YYYY-MM-DD');
-    const rentDate = new Date(Date.now()).toISOString().split('T')[0]
+    const rentDate = new Date(Date.now()).toISOString().split('T')[0];
+    
 
     try {
         if (daysRented<1) return res.sendStatus(400)
@@ -55,8 +56,9 @@ export async function createRental(req, res) {
         if (!game.rows[0]) return res.sendStatus(400)
 
         //verificar se há disponibilidade
-        const disp = await db.query(`SELECT * FROM rentals WHERE "returnDate" =$1 AND "gameId"=$2;`, [null, gameId])
-        if(disp.rows.length >= game.rows[0].stockTotal) res.sendStatus(400)
+        const disp = await db.query(`SELECT * FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NULL;`, [gameId])
+    
+        if(disp.rows.length >= game.rows[0].stockTotal) return res.sendStatus(400)
         
         const valueGame = game.rows[0].pricePerDay;
         const originalPrice = daysRented*valueGame;
