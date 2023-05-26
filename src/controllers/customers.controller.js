@@ -1,10 +1,13 @@
 import { db } from "../database/database.connection.js"
-import moment from "moment"
 
 export async function getCustomers(req, res) {
     try {
         const customers = await db.query(`SELECT * FROM customers;`)
+        customers.rows = customers.rows.map(d => ({
+            ... d, birthday: new Date(d.birthday).toISOString().split('T')[0]
+        }))
         console.table(customers.rows)
+
         res.send(customers.rows)
     } catch (err) {
         res.status(500).send(err.message)
@@ -19,6 +22,9 @@ export async function getCustomerId(req, res) {
             SELECT * FROM customers WHERE customers.id=$1;`
         , [id])
         if(!customerId.rows[0]) return res.sendStatus(404);
+        customerId.rows = customerId.rows.map(d => ({
+            ... d, birthday: new Date(d.birthday).toISOString().split('T')[0]
+        }))
         res.send(customerId.rows[0])
 
     } catch (err) {
@@ -28,9 +34,7 @@ export async function getCustomerId(req, res) {
 
 export async function createCustomer(req, res) {
     const { name, phone, cpf, birthday } = req.body;
-    const birth = new Date(birthday).toISOString().split('T')[0];
-
-    
+        
     try {
         const cpfCustomer = await db.query(`
             SELECT * FROM customers WHERE cpf=$1;
@@ -39,7 +43,7 @@ export async function createCustomer(req, res) {
 
         const newCustomer = await db.query(`
             INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);
-            `, [name, phone, cpf, birth]);
+            `, [name, phone, cpf, birthday]);
         res.sendStatus(201)
     } catch (err) {
         res.status(500).send(err.message)
